@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+
+
+class GemsParser
+  def self.parse(file)
+    gp = GemsParser.new
+    gp.parse(file)
+    gp
+  end
+
+  def initialize
+    @target_dir = nil
+    @target_files = []
+  end
+
+  attr_reader :target_dir, :target_files
+
+  def parse(file)
+    self.instance_eval(file)
+  end
+
+  def dir(path)
+    @target_dir = path
+  end
+
+  def download(name, ver)
+    @target_files << [name, ver]
+  end
+end
+
+
+
+if ARGV.empty?
+  puts "Invalid usage!"
+  puts "./bin/gem_downloader gems.rb"
+  exit 0
+end
+
+gp = GemsParser.parse(File.read(ARGV[0]))
+index = 0
+file_format = "%0#{(gp.target_files.length - 1).to_s.length}d-%s-%s.gem"
+
+FileUtils.remove_dir(gp.target_dir, true)
+Dir.mkdir(gp.target_dir)
+Dir.chdir(gp.target_dir) {
+  gp.target_files.each { |n, v, an|
+    path = sprintf(file_format, index, n, v)
+    loop {
+      `curl -o #{path} -L http://rubygems.org/downloads/#{n}-#{v}.gem`
+      `gem install --explain #{path} --no-ri --no-rdoc`
+      break if $?.success?
+      sleep 1
+    }
+    index += 1
+  }
+}

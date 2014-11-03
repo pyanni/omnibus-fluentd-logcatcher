@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# Perform necessary fluentd-logcatcher removal steps
+# after package is uninstalled.
+#
+
+echo "fluentd-logcatcher has been uninstalled!"
+
+exit 0
